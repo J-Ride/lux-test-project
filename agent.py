@@ -30,7 +30,7 @@ def build_tool_results(content: list) -> list[dict]:
             result = execute_tool(block.name, block.input)
             results.append({
                 "type": "tool_result",
-                "tool_use_id": block.tool_use_id,
+                "tool_use_id": block.id,
                 "content": json.dumps(result),
             })
     return results
