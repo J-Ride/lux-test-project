@@ -5,7 +5,7 @@ import datetime
 _DATA_PATH = pathlib.Path(__file__).parent / "DOCS" / "Supplied" / "sample-jobtread.json"
 
 try:
-    JOBS_DATA: dict = json.loads(_DATA_PATH.read_text())
+    JOBS_DATA: dict = json.loads(_DATA_PATH.read_text(encoding="utf-8"))
 except (FileNotFoundError, json.JSONDecodeError) as e:
     import sys
     print(f"Error loading job data from {_DATA_PATH}: {e}", file=sys.stderr)

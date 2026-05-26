@@ -36,12 +36,15 @@ def build_tool_results(content: list) -> list[dict]:
     return results
 
 
+MAX_TURNS = 10
+
+
 def run_agent(question: str) -> None:
     """Drive the agentic tool-use loop until the model returns end_turn."""
     client = anthropic.Anthropic()
     messages = [{"role": "user", "content": question}]
 
-    while True:
+    for _ in range(MAX_TURNS):
         response = client.messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
@@ -52,7 +55,7 @@ def run_agent(question: str) -> None:
 
         if response.stop_reason == "end_turn":
             for block in response.content:
-                if hasattr(block, "text"):
+                if block.type == "text":
                     print(block.text)
             break
 
@@ -63,6 +66,8 @@ def run_agent(question: str) -> None:
             continue
 
         raise RuntimeError(f"Unexpected stop_reason: {response.stop_reason}")
+
+    raise RuntimeError("Agent exceeded maximum turns without reaching end_turn")
 
 
 def main() -> None:

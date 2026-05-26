@@ -1,6 +1,8 @@
+CLAUDE.md
 CLAUDE.local.md
 .env
 *.env
 __pycache__/
 *.pyc
 .venv/
+~$*.docx
