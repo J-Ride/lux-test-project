@@ -122,13 +122,16 @@ Real agentic loop. Not single-shot. The loop:
 5. CLI entry: accept question as argument (`sys.argv[1:]`) or from stdin. Exit with usage message if neither.
 6. `load_dotenv()` at top of `agent.py`. `anthropic.Anthropic()` reads the key automatically.
 
-Use Context7 to confirm the current model string and SDK patterns before writing any agent code.
+Use claude-sonnet-4-6 as the model string. Verify it is valid via Context7 before writing any agent code. Do not substitute a different model string.
 
 ---
 
 ## System Prompt (prompts.py)
 
-Build as a function, not a constant.
+Build as a function, not a constant. Before writing this file, read both of the following:
+
+- DOCS/Supplied/lux-style-guide.md — the authoritative style rules. Build the system prompt from this file directly, not from any paraphrase of it.
+- DOCS/Supplied/sample-foreman-output.md — the target tone and format. Use this as a few-shot example in the system prompt so the agent has a concrete reference for what Brad expects.
 
 Include verbatim:
 > LUX Quality Homes is a custom home builder in Kelowna, BC, scaling from $10M to $20M in revenue this year, $50M in three. The audience for these briefs is Brad McNaughton, the CEO and founder. Brad reads morning briefs while drinking coffee at 5:15 AM. He wants the headline first, the specifics behind it, the names of jobs and trades, the dollar variances, and the schedule slips. He does not want a chatbot opener, a recap of what he already knows, or any kind of cheerful framing. He wants the truth, ordered by what is on fire.
@@ -164,6 +167,25 @@ After the agent is working, run these and capture real output including stderr:
 
 Scan each output for style violations before writing `sample-interactions.md`. If any appear, tighten the system prompt and re-run.
 
+After each run, scan the output for:
+- Em dashes (search for " -- " or the em dash character)
+- Any banned word from the list
+- Filler openers
+- Exclamation points
+
+If any appear, tighten the system prompt and re-run. Do not accept a sample interaction that violates the rules.
+
+Format sample-interactions.md as:
+```
+## Interaction 1
+**Question:** What is on fire across all active jobs this morning?
+
+**Tool calls:**
+[tool] get_jobs({'filter': 'active'})
+
+**Answer:**
+[exact agent output pasted here]
+```
 ---
 
 ## Code Quality Standards
@@ -201,9 +223,62 @@ What Atlas flags:
 
 ---
 
-## Agents to Run
+## Agent Usage During This Build
 
-- `@code-reviewer` after `agent.py` and `tools.py` are written
-- `@security-reviewer` once, confirm no credential exposure
-- `@doc-reviewer` after `README.md` and `NOTES.md` are written
-- Address any blocking findings before shipping
+### Use Context7 first (planning phase, before any code)
+```
+use Context7 to get current Anthropic Python SDK documentation for tool use and the messages loop
+```
+Get the current model string. Do not use a model name from memory.
+
+### Use @code-reviewer after agent.py and tools.py are written
+```
+@code-reviewer
+```
+Focus: tool use loop correctness, error handling in execute_tool, env var loading, any hardcoded values.
+
+### Use @security-reviewer once
+```
+@security-reviewer
+```
+Focus: no credentials in code or data files, .gitignore is correct.
+
+### Use @doc-reviewer after README.md and NOTES.md are written
+```
+@doc-reviewer
+```
+Focus: can a stranger actually run this from the README alone, are NOTES.md answers specific.
+
+### Do not use @performance-reviewer
+Not relevant for a CLI agent on sample data.
+
+--- 
+## README.md Requirements
+
+One page. Assume the reader has never touched the codebase.
+
+Include:
+1. What this is — one sentence.
+2. Prerequisites: Python 3.10+, pip.
+3. Setup: clone, create .env from .env.example, add API key, pip install -r requirements.txt.
+4. Run commands with examples.
+5. How to capture tool calls (the 2>&1 flag explained in one sentence).
+6. Folder structure — brief.
+
+No marketing language. No "powerful" or "intelligent." Just how to run it.
+
+---
+
+## NOTES.md Requirements
+
+One page. Three questions answered directly.
+
+Question 1 — One architecture choice and why:
+Answer: why separate agent.py, tools.py, and prompts.py instead of a single file. (The answer is separation of concerns: each file has one job. Adding a third tool is a tools.py-only change. Swapping the data source from JSON to a live API is a tools.py-only change. The loop in agent.py stays unchanged. A reviewer can read any one file and understand it without reading the others.)
+
+Question 2 — One thing you would do differently with four more hours:
+Answer this based on what was actually built. Write what is true. Likely options: add a --verbose flag to control whether tool call output shows, add a date-aware context so the agent knows what "today" is and can surface jobs with completion dates within 30 days, or add structured output validation so the answer is checked against the style rules before printing.
+
+Question 3 — One ambiguity in the brief and how you resolved it:
+Answer: the brief did not specify whether the agent should default to a filter or require explicit filter input. Resolved by making the filter parameter required in the tool schema with an enum of valid values, so the agent always makes an explicit choice and invalid values return a clean error rather than silently returning wrong data.
+---
