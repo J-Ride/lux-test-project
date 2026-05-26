@@ -2,9 +2,14 @@ import json
 import pathlib
 import datetime
 
-JOBS_DATA: dict = json.loads(
-    (pathlib.Path(__file__).parent / "DOCS" / "Supplied" / "sample-jobtread.json").read_text()
-)
+_DATA_PATH = pathlib.Path(__file__).parent / "DOCS" / "Supplied" / "sample-jobtread.json"
+
+try:
+    JOBS_DATA: dict = json.loads(_DATA_PATH.read_text())
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    import sys
+    print(f"Error loading job data from {_DATA_PATH}: {e}", file=sys.stderr)
+    sys.exit(1)
 
 TOOLS: list[dict] = [
     {

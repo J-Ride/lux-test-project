@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from tools import execute_tool, TOOLS
 from prompts import get_system_prompt
 
+MODEL = "claude-sonnet-4-6"
+MAX_TOKENS = 4096
+
 
 def parse_question() -> str:
     """Return the user's question from argv or stdin, exiting if none provided."""
@@ -40,8 +43,8 @@ def run_agent(question: str) -> None:
 
     while True:
         response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=4096,
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
             system=get_system_prompt(),
             tools=TOOLS,
             messages=messages,
