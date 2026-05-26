@@ -12,7 +12,7 @@ Python must be on your PATH. On Windows, use the full path to `python.exe` if th
 ## Setup
 
 ```
-git clone <repo>
+git clone https://github.com/J-Ride/lux-test-project
 cd lux-test-project
 cp .env.example .env
 # Set ANTHROPIC_API_KEY=your-key-here in .env
